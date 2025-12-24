@@ -1,6 +1,15 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// 4️⃣ FAIL FAST IF DATABASE_URL IS MISSING
+if (!process.env.DATABASE_URL) {
+  console.error('FATAL ERROR: DATABASE_URL environment variable is required');
+  console.error('This backend requires Render PostgreSQL connection string');
+  process.exit(1);
+}
+
+console.log('Using DATABASE_URL:', process.env.DATABASE_URL.replace(/\/\/.*@/, '//***:***@'));
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -10,8 +19,11 @@ const pool = new Pool({
 pool.connect((err, client, release) => {
   if (err) {
     console.error('Error connecting to database:', err.stack);
+    console.error('DATABASE_URL format should be: postgresql://user:pass@host:port/dbname');
+    process.exit(1);
   } else {
     console.log('Database connected successfully');
+    console.log('Connected to:', client.host || 'Render PostgreSQL');
     release();
   }
 });
@@ -31,6 +43,7 @@ const createUsersTable = async () => {
     console.log('Users table created successfully');
   } catch (error) {
     console.error('Error creating users table:', error);
+    process.exit(1);
   }
 };
 
