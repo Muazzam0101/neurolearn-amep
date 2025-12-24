@@ -31,6 +31,8 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'NeuroLearn API is running', 
     status: 'OK',
+    version: '1.0.1-cors-fix',
+    corsEnabled: 'https://neurolearn-amep.vercel.app',
     endpoints: ['/health', '/api/login', '/api/signup']
   });
 });
