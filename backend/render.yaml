@@ -11,5 +11,5 @@ services:
         generateValue: true
     disk:
       name: sqlite-data
-      mountPath: /opt/render/project/src
+      mountPath: /opt/render/project/src/data
       sizeGB: 1
