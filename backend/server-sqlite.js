@@ -8,10 +8,27 @@ const PORT = process.env.PORT || 5000;
 
 // CORS configuration for production
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://neurolearn.vercel.app', 'https://amep-frontend.vercel.app', 'https://neurolearn-amep.vercel.app']
-    : ['http://localhost:3000'],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://neurolearn.vercel.app',
+      'https://amep-frontend.vercel.app', 
+      'https://neurolearn-amep.vercel.app',
+      'http://localhost:3000'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
