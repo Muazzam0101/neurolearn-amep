@@ -5,7 +5,6 @@ import Signup from './pages/Signup';
 import { TeacherDashboard } from './pages/Teacher';
 import { StudentDashboard, QuizPage } from './pages/Student';
 import ThemeToggle from './components/ThemeToggle';
-import EnvTest from './components/EnvTest';
 import { ContentProvider } from './context/ContentContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CourseProvider } from './context/CourseContext';
@@ -34,7 +33,6 @@ function App() {
       <CourseProvider>
         <ContentProvider>
           <div className="page-fade-in">
-            <EnvTest />
             <ThemeToggle />
             <AppRoutes />
           </div>
