@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// 1️⃣ Define API base URL (already includes /api prefix)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// 1️⃣ Define API base URL and ensure /api prefix
+const BACKEND_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+const API_BASE_URL = BACKEND_URL.endsWith('/api') ? BACKEND_URL : `${BACKEND_URL}/api`;
 
 // 3️⃣ Console log to confirm resolved value at runtime
 console.log('Environment check:');
@@ -16,7 +17,7 @@ const api = axios.create({
   },
 });
 
-// 2️⃣ & 3️⃣ API calls with correct routes (no double /api prefix)
+// 2️⃣ & 3️⃣ API calls with /api prefix
 export const authAPI = {
   login: (credentials) => {
     console.log('Making login request to:', `${API_BASE_URL}/login`);
