@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// 1️⃣ Define API base URL with proper fallback
+// 1️⃣ Define API base URL (already includes /api prefix)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // 3️⃣ Console log to confirm resolved value at runtime
@@ -16,7 +16,7 @@ const api = axios.create({
   },
 });
 
-// 2️⃣ API calls constructed with base URL
+// 2️⃣ & 3️⃣ API calls with correct routes (no double /api prefix)
 export const authAPI = {
   login: (credentials) => {
     console.log('Making login request to:', `${API_BASE_URL}/login`);
