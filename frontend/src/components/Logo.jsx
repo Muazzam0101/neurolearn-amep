@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-// import logoImage from '../assets/edtechlogo.jpg';
+import logoImage from '../assests/logo/edtechlogo.jpg';
 
 const Logo = ({ size = 'medium', clickable = false, className = '' }) => {
   const navigate = useNavigate();
@@ -20,27 +20,15 @@ const Logo = ({ size = 'medium', clickable = false, className = '' }) => {
     large: 'logo-large'
   };
 
-  // Temporary placeholder until actual logo is added
   return (
-    <div
-      className={`logo-placeholder ${sizeClasses[size]} ${clickable ? 'logo-clickable' : ''} ${className}`}
+    <img
+      src={logoImage}
+      alt="NeuroLearn Logo - Adaptive Learning Platform"
+      className={`logo ${sizeClasses[size]} ${clickable ? 'logo-clickable' : ''} ${className}`}
       onClick={clickable ? handleClick : undefined}
       style={{ cursor: clickable ? 'pointer' : 'default' }}
-    >
-      NeuroLearn
-    </div>
+    />
   );
-
-  // Uncomment when actual logo is available:
-  // return (
-  //   <img
-  //     src={logoImage}
-  //     alt="NeuroLearn - Adaptive Learning Platform"
-  //     className={`logo ${sizeClasses[size]} ${clickable ? 'logo-clickable' : ''} ${className}`}
-  //     onClick={clickable ? handleClick : undefined}
-  //     style={{ cursor: clickable ? 'pointer' : 'default' }}
-  //   />
-  // );
 };
 
 export default Logo;

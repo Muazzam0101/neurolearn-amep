@@ -56,7 +56,7 @@ const Login = () => {
       <Toaster position="top-right" />
       
       <div className="auth-illustration">
-        <div className="auth-brand">NeuroLearn</div>
+        <Logo size="large" className="auth-brand-logo" />
         <div className="auth-tagline">
           Adaptive Learning Platform
         </div>
