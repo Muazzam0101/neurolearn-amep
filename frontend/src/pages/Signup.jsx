@@ -87,6 +87,7 @@ const Signup = () => {
             placeholder="Enter your email"
             value={formData.email}
             onChange={handleInputChange('email')}
+            disabled={loading}
             required
           />
 
@@ -96,6 +97,7 @@ const Signup = () => {
             placeholder="Create a password"
             value={formData.password}
             onChange={handleInputChange('password')}
+            disabled={loading}
             required
           />
 
@@ -105,6 +107,7 @@ const Signup = () => {
             placeholder="Confirm your password"
             value={formData.confirmPassword}
             onChange={handleInputChange('confirmPassword')}
+            disabled={loading}
             required
           />
 
@@ -113,6 +116,7 @@ const Signup = () => {
             <RoleSelector
               selectedRole={formData.role}
               onRoleChange={handleRoleChange}
+              disabled={loading}
             />
           </div>
 

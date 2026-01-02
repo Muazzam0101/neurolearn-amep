@@ -76,6 +76,7 @@ const Login = () => {
             placeholder="Enter your email"
             value={formData.email}
             onChange={handleInputChange('email')}
+            disabled={loading}
             required
           />
 
@@ -85,6 +86,7 @@ const Login = () => {
             placeholder="Enter your password"
             value={formData.password}
             onChange={handleInputChange('password')}
+            disabled={loading}
             required
           />
 
@@ -93,6 +95,7 @@ const Login = () => {
             <RoleSelector
               selectedRole={formData.role}
               onRoleChange={handleRoleChange}
+              disabled={loading}
             />
           </div>
 

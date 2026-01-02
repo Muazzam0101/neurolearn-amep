@@ -1,6 +1,6 @@
 import React from 'react';
 
-const RoleSelector = ({ selectedRole, onRoleChange }) => {
+const RoleSelector = ({ selectedRole, onRoleChange, disabled = false }) => {
   return (
     <div className="role-selector">
       <div className="role-option">
@@ -11,6 +11,7 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
           value="student"
           checked={selectedRole === 'student'}
           onChange={(e) => onRoleChange(e.target.value)}
+          disabled={disabled}
         />
         <label htmlFor="student">Student</label>
       </div>
@@ -22,6 +23,7 @@ const RoleSelector = ({ selectedRole, onRoleChange }) => {
           value="teacher"
           checked={selectedRole === 'teacher'}
           onChange={(e) => onRoleChange(e.target.value)}
+          disabled={disabled}
         />
         <label htmlFor="teacher">Teacher</label>
       </div>
