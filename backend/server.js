@@ -200,8 +200,8 @@ app.post('/api/forgot-password', async (req, res) => {
         [hashedToken, tokenExpiry, email]
       );
 
-      // Generate reset link with PRODUCTION frontend URL
-      const frontendUrl = 'https://neurolearn-frontend.vercel.app';
+      // Generate reset link with CORRECT production frontend URL
+      const frontendUrl = process.env.FRONTEND_URL || 'https://neurolearn-amep.vercel.app';
       const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
       
       console.log(`🔗 Reset link: ${resetLink}`);
