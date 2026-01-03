@@ -29,4 +29,23 @@ export const authAPI = {
   },
 };
 
+// Password Reset API functions
+export const requestPasswordReset = async (email) => {
+  console.log('Making password reset request to:', `${API_BASE_URL}/forgot-password`);
+  const response = await api.post('/forgot-password', { email });
+  return response.data;
+};
+
+export const validateResetToken = async (token) => {
+  console.log('Validating reset token:', `${API_BASE_URL}/validate-reset-token`);
+  const response = await api.post('/validate-reset-token', { token });
+  return response.data;
+};
+
+export const resetPassword = async (token, newPassword) => {
+  console.log('Resetting password:', `${API_BASE_URL}/reset-password`);
+  const response = await api.post('/reset-password', { token, newPassword });
+  return response.data;
+};
+
 export default api;

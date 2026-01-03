@@ -90,6 +90,10 @@ const Login = () => {
             required
           />
 
+          <div className="forgot-password-link">
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </div>
+
           <div className="form-group">
             <label className="form-label">I am a:</label>
             <RoleSelector

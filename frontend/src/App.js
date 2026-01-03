@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import { TeacherDashboard } from './pages/Teacher';
 import { StudentDashboard, QuizPage } from './pages/Student';
 import ThemeToggle from './components/ThemeToggle';
@@ -18,6 +20,8 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={!currentUser ? <Login /> : <Navigate to={currentUser.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard'} />} />
         <Route path="/signup" element={!currentUser ? <Signup /> : <Navigate to={currentUser.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard'} />} />
+        <Route path="/forgot-password" element={!currentUser ? <ForgotPassword /> : <Navigate to={currentUser.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard'} />} />
+        <Route path="/reset-password/:token" element={!currentUser ? <ResetPassword /> : <Navigate to={currentUser.role === 'teacher' ? '/teacher-dashboard' : '/student-dashboard'} />} />
         <Route path="/teacher-dashboard" element={currentUser?.role === 'teacher' ? <TeacherDashboard /> : <Navigate to="/login" />} />
         <Route path="/student-dashboard" element={currentUser?.role === 'student' ? <StudentDashboard /> : <Navigate to="/login" />} />
         <Route path="/quiz" element={currentUser?.role === 'student' ? <QuizPage /> : <Navigate to="/login" />} />
