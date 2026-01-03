@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Real SMTP Email Service
 const createEmailTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: process.env.EMAIL_PORT || 587,
     secure: false,
@@ -28,13 +28,17 @@ const createEmailTransporter = () => {
 
 const sendPasswordResetEmail = async (email, resetLink) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('⚠️ Email credentials not configured, logging reset link:');
-    console.log(`Reset link: ${resetLink}`);
+    console.error('❌ Email credentials not configured');
+    console.log(`Reset link (fallback): ${resetLink}`);
     return;
   }
 
   try {
     const transporter = createEmailTransporter();
+    
+    // Verify SMTP connection
+    await transporter.verify();
+    console.log('✅ SMTP connection verified');
     
     const mailOptions = {
       from: `"NeuroLearn" <${process.env.EMAIL_USER}>`,
@@ -55,12 +59,18 @@ const sendPasswordResetEmail = async (email, resetLink) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent to: ${email}`);
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Password reset email sent successfully to: ${email}`);
+    console.log(`📧 Message ID: ${result.messageId}`);
   } catch (error) {
-    console.error('❌ Email sending failed:', error.message);
-    // Fallback to logging
-    console.log(`Reset link: ${resetLink}`);
+    console.error('❌ Email sending failed:');
+    console.error('Error:', error.message);
+    if (error.code) console.error('Code:', error.code);
+    if (error.response) console.error('Response:', error.response);
+    
+    // Fallback logging (don't expose to frontend)
+    console.log(`Reset link (email failed): ${resetLink}`);
+    throw new Error('Email delivery failed');
   }
 };
 
@@ -177,12 +187,23 @@ app.post('/api/forgot-password', async (req, res) => {
         [hashedToken, tokenExpiry, email]
       );
 
-      // Generate reset link with correct frontend URL
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      // Generate reset link with production frontend URL
+      const frontendUrl = process.env.FRONTEND_URL;
+      if (!frontendUrl) {
+        console.error('❌ FRONTEND_URL environment variable not set');
+        return res.status(500).json({ message: 'Server configuration error' });
+      }
+      
       const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+      console.log(`🔗 Generated reset link for production frontend`);
       
       // Send email with reset link
-      await sendPasswordResetEmail(email, resetLink);
+      try {
+        await sendPasswordResetEmail(email, resetLink);
+      } catch (emailError) {
+        console.error('❌ Email delivery failed:', emailError.message);
+        // Don't expose email errors to client, but still return success for security
+      }
     }
 
     // Always return success (security: don't reveal if email exists)
