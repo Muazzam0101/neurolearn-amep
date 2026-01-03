@@ -12,6 +12,22 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Email service placeholder - replace with actual email service
+const sendPasswordResetEmail = async (email, resetLink) => {
+  // TODO: Implement actual email service
+  // Example integrations:
+  // - SendGrid: https://sendgrid.com/
+  // - Nodemailer: https://nodemailer.com/
+  // - AWS SES: https://aws.amazon.com/ses/
+  
+  console.log(`📧 EMAIL SERVICE: Sending reset email to ${email}`);
+  console.log(`Subject: Reset Your NeuroLearn Password`);
+  console.log(`Reset Link: ${resetLink}`);
+  
+  // Simulate email sending delay
+  return new Promise(resolve => setTimeout(resolve, 100));
+};
+
 // Signup route
 app.post('/api/signup', async (req, res) => {
   try {
@@ -125,8 +141,15 @@ app.post('/api/forgot-password', async (req, res) => {
         [hashedToken, tokenExpiry, email]
       );
 
-      // In production, send email with reset link
-      console.log(`Password reset link: http://localhost:3000/reset-password/${resetToken}`);
+      // Generate reset link
+      const frontendUrl = process.env.FRONTEND_URL || 'https://neurolearn-frontend.vercel.app';
+      const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
+      
+      // TODO: Replace with actual email service (SendGrid, Nodemailer, etc.)
+      await sendPasswordResetEmail(email, resetLink);
+      
+      console.log(`📧 Password reset email would be sent to: ${email}`);
+      console.log(`Reset link: ${resetLink}`);
     }
 
     // Always return success (security: don't reveal if email exists)
