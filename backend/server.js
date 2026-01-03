@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const pool = require('./db');
 require('dotenv').config();
 
@@ -13,64 +14,111 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Real SMTP Email Service
-const createEmailTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-};
-
+// Production Email Service with Resend + SMTP fallback
 const sendPasswordResetEmail = async (email, resetLink) => {
+  const emailFrom = process.env.EMAIL_FROM || 'NeuroLearn <noreply@neurolearn.com>';
+  
+  const emailContent = {
+    subject: 'Reset Your NeuroLearn Password',
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #06b6d4; margin: 0;">NeuroLearn</h1>
+          <p style="color: #64748b; margin: 5px 0 0 0;">Adaptive Learning Platform</p>
+        </div>
+        
+        <h2 style="color: #1e293b; margin-bottom: 20px;">Password Reset Request</h2>
+        
+        <p style="color: #475569; line-height: 1.6; margin-bottom: 25px;">
+          We received a request to reset your password. Click the button below to create a new password:
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="display: inline-block; padding: 14px 28px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Reset My Password</a>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">
+          If the button doesn't work, copy and paste this link into your browser:<br>
+          <a href="${resetLink}" style="color: #06b6d4; word-break: break-all;">${resetLink}</a>
+        </p>
+        
+        <div style="background: #f8fafc; padding: 15px; border-radius: 6px; margin: 25px 0;">
+          <p style="color: #ef4444; font-weight: 600; margin: 0 0 5px 0; font-size: 14px;">⚠️ Important Security Notice</p>
+          <p style="color: #64748b; margin: 0; font-size: 14px; line-height: 1.4;">
+            This link expires in 30 minutes. If you didn't request this reset, please ignore this email.
+          </p>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+        
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
+          © 2024 NeuroLearn. This is an automated message, please do not reply.
+        </p>
+      </div>
+    `
+  };
+
+  // Try Resend first (preferred for production)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      
+      const result = await resend.emails.send({
+        from: emailFrom,
+        to: email,
+        subject: emailContent.subject,
+        html: emailContent.html
+      });
+      
+      console.log(`✅ Password reset email SENT to ${email} via Resend`);
+      console.log(`📧 Resend ID: ${result.data?.id}`);
+      return;
+    } catch (error) {
+      console.error('❌ Resend failed:', error.message);
+      console.log('🔄 Falling back to SMTP...');
+    }
+  }
+
+  // Fallback to SMTP (Gmail)
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('❌ Email credentials not configured');
-    console.log(`Reset link (fallback): ${resetLink}`);
-    return;
+    console.error('❌ No email service configured (missing RESEND_API_KEY and SMTP credentials)');
+    console.log(`Reset link (NO EMAIL SENT): ${resetLink}`);
+    throw new Error('Email service not configured');
   }
 
   try {
-    const transporter = createEmailTransporter();
+    const transporter = nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT) || 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
     
     // Verify SMTP connection
     await transporter.verify();
     console.log('✅ SMTP connection verified');
     
-    const mailOptions = {
-      from: `"NeuroLearn" <${process.env.EMAIL_USER}>`,
+    const result = await transporter.sendMail({
+      from: emailFrom,
       to: email,
-      subject: 'Reset Your NeuroLearn Password',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #06b6d4;">Reset Your Password</h2>
-          <p>You requested a password reset for your NeuroLearn account.</p>
-          <p>Click the button below to reset your password:</p>
-          <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; text-decoration: none; border-radius: 8px; margin: 20px 0;">Reset Password</a>
-          <p>Or copy and paste this link: <a href="${resetLink}">${resetLink}</a></p>
-          <p><strong>This link will expire in 30 minutes.</strong></p>
-          <p>If you didn't request this reset, please ignore this email.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-          <p style="color: #666; font-size: 12px;">NeuroLearn - Adaptive Learning Platform</p>
-        </div>
-      `
-    };
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log(`✅ Password reset email sent successfully to: ${email}`);
-    console.log(`📧 Message ID: ${result.messageId}`);
-  } catch (error) {
-    console.error('❌ Email sending failed:');
-    console.error('Error:', error.message);
-    if (error.code) console.error('Code:', error.code);
-    if (error.response) console.error('Response:', error.response);
+      subject: emailContent.subject,
+      html: emailContent.html
+    });
     
-    // Fallback logging (don't expose to frontend)
-    console.log(`Reset link (email failed): ${resetLink}`);
-    throw new Error('Email delivery failed');
+    console.log(`✅ Password reset email SENT to ${email} via SMTP`);
+    console.log(`📧 Message ID: ${result.messageId}`);
+    
+  } catch (error) {
+    console.error('❌ SMTP email sending FAILED:');
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error response:', error.response);
+    
+    console.log(`Reset link (EMAIL FAILED): ${resetLink}`);
+    throw new Error(`Email delivery failed: ${error.message}`);
   }
 };
 
@@ -187,23 +235,14 @@ app.post('/api/forgot-password', async (req, res) => {
         [hashedToken, tokenExpiry, email]
       );
 
-      // Generate reset link with production frontend URL
-      const frontendUrl = process.env.FRONTEND_URL;
-      if (!frontendUrl) {
-        console.error('❌ FRONTEND_URL environment variable not set');
-        return res.status(500).json({ message: 'Server configuration error' });
-      }
-      
+      // Generate reset link with PRODUCTION frontend URL
+      const frontendUrl = process.env.FRONTEND_URL || 'https://neurolearn-frontend.vercel.app';
       const resetLink = `${frontendUrl}/reset-password/${resetToken}`;
-      console.log(`🔗 Generated reset link for production frontend`);
       
-      // Send email with reset link
-      try {
-        await sendPasswordResetEmail(email, resetLink);
-      } catch (emailError) {
-        console.error('❌ Email delivery failed:', emailError.message);
-        // Don't expose email errors to client, but still return success for security
-      }
+      console.log(`🔗 Reset link: ${resetLink}`);
+      
+      // Send email with reset link - HARD FAIL if email fails
+      await sendPasswordResetEmail(email, resetLink);
     }
 
     // Always return success (security: don't reveal if email exists)
